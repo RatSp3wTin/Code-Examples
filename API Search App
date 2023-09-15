@@ -1,0 +1,47 @@
+#Import the required modules 
+from flask import Flask, render_template, request, redirect
+import requests
+
+#set the url for the API, define the flask app and generate a variable containing the API data  
+api_url ='http://www.fruityvice.com/api/fruit/all'
+app = Flask(__name__) 
+all_fruits = requests.get(api_url).json()
+
+# Set routes for the various html files, Index, About, Search and Comments
+@app.route("/")
+def index():
+    return render_template("index.html", fruits=all_fruits)
+
+@app.route('/about/')
+def about():
+    return render_template('about.html')
+
+#search html returns fruit name variable to be passed to the show html
+@app.route('/search', methods=["GET","POST"])
+def search():
+    if request.method=="POST":
+        fruit_name=request.form["fruit_name"]
+        return redirect (f"/show/{fruit_name}")
+    return render_template('search.html')
+
+# show html returns the specific fruit listing
+@app.route('/show/<fruit_name>')
+def show(fruit_name):
+    for fruit in all_fruits:
+        if fruit["name"].lower() == fruit_name.lower():
+            return render_template("show.html", fruit=fruit)
+#an error message is included for attempted searches outside the database parameters  
+    return render_template("error.html")
+
+#For the purposes of the exercise comments are just hardcoded examples
+@app.route('/comments/')
+def comments():
+    comments = ['Instructions unclear, make sure you peel banana before blending.',
+                'Seconded for kiwi.',
+                'Leave the skin on the kiwi, extra nutrients.',
+                '1/5 couldnt find broccoli on the list.'
+                ]
+    return render_template('comments.html', comments=comments)
+
+if __name__ == '__main__':
+    app.run()
